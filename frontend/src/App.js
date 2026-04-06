@@ -45,7 +45,7 @@ function App() {
         {response && (
           <div style={styles.result}>
             <h3>Response</h3>
-            <p>{response.answer}</p>
+            <p>{response?response: ""}</p>
 
             {response.ticket_id && (
               <p><b>Ticket ID:</b> {response.ticket_id}</p>
