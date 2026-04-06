@@ -8,7 +8,7 @@ function App() {
   const askAI = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/ask", {
+      const res = await fetch("https://ai-ticketing-system-c1y6.onrender.com/ask", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
