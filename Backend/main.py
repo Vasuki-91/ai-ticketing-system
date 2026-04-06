@@ -62,24 +62,38 @@ def auto_response(category):
 
 # --- API ---
 @app.post("/ask")
-def ask_ai(query: Query):
-    analysis = analyze_ticket(query.question)
+def ask(query: Query):
+    q = query.question.lower()
 
-    if analysis["action"] == "Auto-resolve":
-        answer = auto_response(analysis["category"])
-        return {
-            "answer": answer,
-            "analysis": analysis
-        }
+    if "login" in q:
+        answer = "Please reset your password or check your credentials."
+        category = "Authentication"
+        department = "IT Support"
+
+    elif "payment" in q:
+        answer = "Please verify your payment details or contact billing support."
+        category = "Billing"
+        department = "Finance"
+
+    elif "error" in q:
+        answer = "Try restarting the system or clearing cache."
+        category = "Technical"
+        department = "Tech Team"
+
     else:
-        ticket_id = f"TICK{random.randint(1000,9999)}"
-        return {
-            "answer": "Ticket assigned to department",
-            "ticket_id": ticket_id,
-            "analysis": analysis,
-            "status": "Open",
-            "category": "Bug",
-            "severity": "High",
-            "department": "Engineering",
-            "sentiment": "Frustrated"
+        answer = "Your query has been resolved."
+        category = "Other"
+        department = "Support"
+
+    return {
+        "answer": answer,
+        "analysis": {
+            "category": category,
+            "summary": query.question,
+            "severity": "Medium",
+            "sentiment": "Neutral",
+            "action": "Auto-resolve",
+            "department": department,
+            "confidence": "80%"
         }
+    }
