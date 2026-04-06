@@ -1,8 +1,12 @@
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+import os
+from openai import OpenAI
+client = OpenAI(api_key=os.getenv("OPEN_API_KEY"))
 app = FastAPI()
-
+load_dotenv()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,44 +24,41 @@ def home():
 @app.post("/analyze")
 def analyze(ticket: Ticket):
 
-    text = ticket.text.lower()
+    prompt = f"""
+    You are an AI ticket classifier.
 
-    if "password" in text:
-        return {
-            "category": "Access",
-            "summary": "Password reset issue",
-            "severity": "Low",
-            "resolution": "auto",
-            "department": "IT",
-            "auto_response": "Please reset your password."
-        }
+    Analyze this ticket and return JSON:
 
-    elif "server" in text:
-        return {
-            "category": "Server",
-            "summary": "Server problem",
-            "severity": "High",
-            "resolution": "assign",
-            "department": "Engineering",
-            "auto_response": "Assigned to engineering team."
-        }
+    {{
+      "category": "",
+      "summary": "",
+      "severity": "",
+      "resolution": "",
+      "department": "",
+      "sentiment": "",
+      "confidence": "",
+      "estimated_time": ""
+    }}
 
-    elif "salary" in text:
-        return {
-            "category": "Finance",
-            "summary": "Salary issue",
-            "severity": "Medium",
-            "resolution": "assign",
-            "department": "Finance",
-            "auto_response": "Assigned to finance team."
-        }
+    Ticket: {ticket.text}
+    """
 
-    else:
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        ai_output = response.choices[0].message.content
+
+        return {"ai_result": ai_output}
+
+    except:
+        # fallback if AI fails
         return {
             "category": "General",
-            "summary": "General issue",
+            "summary": "Fallback response",
             "severity": "Medium",
-            "resolution": "assign",
             "department": "Support",
-            "auto_response": "Assigned to support team."
+            "resolution": "assign"
         }
