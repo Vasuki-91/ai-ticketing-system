@@ -17,7 +17,7 @@ function App() {
       });
 
       const data = await res.json();
-      setResponse(data);
+      setResponse(data.answer);
     } catch (error) {
       console.error(error);
       setResponse({ answer: "Error connecting to backend" });
