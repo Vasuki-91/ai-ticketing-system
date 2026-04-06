@@ -13,14 +13,26 @@ function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question: question }), // ✅ FIXED
+        body: JSON.stringify({ question }),
       });
 
+      if (!res.ok) {
+        throw new Error("Server error");
+      }
+
       const data = await res.json();
-      setResponse(data.answer);
+
+      // ✅ Store FULL response
+      setResponse(data);
+
     } catch (error) {
       console.error(error);
-      setResponse({ answer: "Error connecting to backend" });
+
+      // ✅ Safe error structure
+      setResponse({
+        answer: "Error connecting to backend",
+        analysis: {}
+      });
     }
     setLoading(false);
   };
@@ -45,30 +57,20 @@ function App() {
         {response && (
           <div style={styles.result}>
             <h3>Response</h3>
-            <p>{response?response: ""}</p>
 
-            {response.ticket_id && (
-              <p><b>Ticket ID:</b> {response.ticket_id}</p>
-            )}
+            {/* ✅ Answer */}
+            <p>{response.answer}</p>
 
-            {response.status && (
-              <p><b>Status:</b> {response.status}</p>
-            )}
-
-            {response.category && (
-              <p><b>Category:</b> {response.category}</p>
-            )}
-
-            {response.severity && (
-              <p><b>Severity:</b> {response.severity}</p>
-            )}
-
-            {response.department && (
-              <p><b>Department:</b> {response.department}</p>
-            )}
-
-            {response.sentiment && (
-              <p><b>Sentiment:</b> {response.sentiment}</p>
+            {/* ✅ Safe optional rendering */}
+            {response.analysis && (
+              <>
+                <p><b>Category:</b> {response.analysis.category}</p>
+                <p><b>Severity:</b> {response.analysis.severity}</p>
+                <p><b>Sentiment:</b> {response.analysis.sentiment}</p>
+                <p><b>Department:</b> {response.analysis.department}</p>
+                <p><b>Action:</b> {response.analysis.action}</p>
+                <p><b>Confidence:</b> {response.analysis.confidence}</p>
+              </>
             )}
           </div>
         )}
