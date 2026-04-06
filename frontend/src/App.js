@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+iimport React, { useState } from "react";
 
 function App() {
   const [question, setQuestion] = useState("");
@@ -13,7 +13,7 @@ function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ question: question }), // ✅ FIXED
       });
 
       const data = await res.json();
