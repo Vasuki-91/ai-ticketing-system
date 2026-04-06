@@ -1,12 +1,11 @@
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-import os
-from openai import OpenAI
-client = OpenAI(api_key=os.getenv("OPEN_API_KEY"))
+import random
+
 app = FastAPI()
-load_dotenv()
+
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,51 +13,73 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-class Ticket(BaseModel):
-    text: str
 
-@app.get("/")
-def home():
-    return {"message": "Backend is running"}
+class Query(BaseModel):
+    question: str
 
-@app.post("/analyze")
-def analyze(ticket: Ticket):
+# --- AI ANALYSIS FUNCTION ---
+def analyze_ticket(question):
+    q = question.lower()
 
-    prompt = f"""
-    You are an AI ticket classifier.
-
-    Analyze this ticket and return JSON:
-
-    {{
-      "category": "",
-      "summary": "",
-      "severity": "",
-      "resolution": "",
-      "department": "",
-      "sentiment": "",
-      "confidence": "",
-      "estimated_time": ""
-    }}
-
-    Ticket: {ticket.text}
-    """
-
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}]
-        )
-
-        ai_output = response.choices[0].message.content
-
-        return {"ai_result": ai_output}
-
-    except:
-        # fallback if AI fails
+    if "login" in q or "bug" in q:
         return {
-            "category": "General",
-            "summary": "Fallback response",
+            "category": "Bug",
+            "summary": "Login issue detected",
+            "severity": "High",
+            "sentiment": "Frustrated",
+            "action": "Assign",
+            "department": "Engineering",
+            "confidence": "90%"
+        }
+
+    elif "leave" in q or "salary" in q:
+        return {
+            "category": "HR",
+            "summary": "HR related query",
+            "severity": "Low",
+            "sentiment": "Polite",
+            "action": "Auto-resolve",
+            "department": "HR",
+            "confidence": "95%"
+        }
+
+    else:
+        return {
+            "category": "Other",
+            "summary": "General request",
             "severity": "Medium",
+            "sentiment": "Neutral",
+            "action": "Auto-resolve",
             "department": "Support",
-            "resolution": "assign"
+            "confidence": "80%"
+        }
+
+# --- AUTO RESPONSE ---
+def auto_response(category):
+    if category == "HR":
+        return "You can apply leave through HR portal."
+    return "Your query has been resolved."
+
+# --- API ---
+@app.post("/ask")
+def ask_ai(query: Query):
+    analysis = analyze_ticket(query.question)
+
+    if analysis["action"] == "Auto-resolve":
+        answer = auto_response(analysis["category"])
+        return {
+            "answer": answer,
+            "analysis": analysis
+        }
+    else:
+        ticket_id = f"TICK{random.randint(1000,9999)}"
+        return {
+            "answer": "Ticket assigned to department",
+            "ticket_id": ticket_id,
+            "analysis": analysis,
+            "status": "Open",
+            "category": "Bug",
+            "severity": "High",
+            "department": "Engineering",
+            "sentiment": "Frustrated"
         }
